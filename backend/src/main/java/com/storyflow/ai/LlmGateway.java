@@ -95,7 +95,13 @@ public class LlmGateway {
 
     private List<AssetDto> extractAssetsOfType(String type, String templateCategory,
                                                String novelText, String scriptJson, String styleName) {
-        String system = getTemplate(templateCategory);
+        String system = getTemplate(templateCategory) + """
+
+                【本次结构化输出协议，优先于上面的数组格式说明】
+                API 使用 JSON 对象模式，必须将所有提取项放进 items 数组：
+                {"items":[{"name":"名称","aliases":"代称","description":"描述"}]}
+                提取全部符合条件的资产，不得只输出单个资产对象。确实没有该类资产时输出 {"items":[]}。
+                """;
         String propGate = "prop".equals(type)
                 ? """
                 
@@ -114,7 +120,9 @@ public class LlmGateway {
                 提供的剧本摘要为：
                 %s
                 %s
-                根据上面的信息按系统规则提取，只输出 JSON 数组。若确实无可提取项，输出 []。
+                根据上面的信息按系统规则提取全部符合条件的资产。
+                只输出 JSON 对象 {"items":[...]}，不得输出裸数组或单个资产对象。
+                若确实无可提取项，输出 {"items":[]}。
                 """.formatted(styleName, novelText, scriptJson, propGate);
         JsonNode node = callJsonAllowEmpty(system, user);
         List<AssetDto> result = new ArrayList<>();
@@ -1503,7 +1511,7 @@ public class LlmGateway {
                 if (items.isArray() && (allowEmptyItems || !items.isEmpty())) {
                     return node;
                 }
-                last = new BusinessException("AI 返回空 items");
+                last = new BusinessException(items.isArray() ? "AI 返回空 items" : "AI 返回结构缺少 items 数组");
             } catch (Exception ex) {
                 last = ex;
             }
@@ -1644,7 +1652,7 @@ public class LlmGateway {
 
     private JsonNode itemsNode(JsonNode node) {
         if (node == null || node.isNull()) {
-            return objectMapper.createArrayNode();
+            return objectMapper.missingNode();
         }
         if (node.isArray()) {
             return node;
@@ -1658,7 +1666,7 @@ public class LlmGateway {
                 return node.get(key);
             }
         }
-        return objectMapper.createArrayNode();
+        return objectMapper.missingNode();
     }
 
     private List<ScriptDto> parseScripts(JsonNode node) {

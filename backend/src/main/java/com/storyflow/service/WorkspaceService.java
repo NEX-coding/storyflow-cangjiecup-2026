@@ -398,19 +398,20 @@ public class WorkspaceService {
                 .orElse("");
 
         sink.onStatus("准备提取资产…");
-        tx.executeWithoutResult(status -> assetRepository.deleteByProjectId(projectId));
-        sink.onCleared();
-
-        int total = 0;
+        List<List<LlmGateway.AssetDto>> batches = new ArrayList<>();
         int stepTotal = ASSET_EXTRACT_STEPS.length;
         for (int i = 0; i < stepTotal; i++) {
             String type = ASSET_EXTRACT_STEPS[i];
-            int stepIndex = i + 1;
             String label = ASSET_EXTRACT_STEP_LABEL.getOrDefault(type, type);
-            sink.onStatus("正在提取" + label + "（" + stepIndex + "/" + stepTotal + "）…");
-            List<LlmGateway.AssetDto> batch =
-                    llmGateway.extractAssetsOfType(type, novelText, scriptJson, stylePreset);
-            List<WorkspaceDtos.AssetResponse> saved = tx.execute(status -> {
+            sink.onStatus("正在提取" + label + "（" + (i + 1) + "/" + stepTotal + "）…");
+            batches.add(llmGateway.extractAssetsOfType(type, novelText, scriptJson, stylePreset));
+        }
+
+        // 全部模型调用成功后再原子替换；解析失败或超时不能先清空已有资产。
+        List<List<WorkspaceDtos.AssetResponse>> savedBatches = tx.execute(status -> {
+            assetRepository.deleteByProjectId(projectId);
+            List<List<WorkspaceDtos.AssetResponse>> saved = new ArrayList<>();
+            for (List<LlmGateway.AssetDto> batch : batches) {
                 List<WorkspaceDtos.AssetResponse> out = new ArrayList<>();
                 for (LlmGateway.AssetDto dto : batch) {
                     Asset asset = new Asset();
@@ -422,14 +423,19 @@ public class WorkspaceService {
                     assetRepository.save(asset);
                     out.add(toAssetResponse(asset));
                 }
-                return out;
-            });
-            if (saved == null) {
-                saved = List.of();
+                saved.add(out);
             }
+            return saved;
+        });
+        sink.onCleared();
+        int total = 0;
+        for (int i = 0; i < stepTotal; i++) {
+            String type = ASSET_EXTRACT_STEPS[i];
+            List<WorkspaceDtos.AssetResponse> saved = savedBatches.get(i);
             total += saved.size();
-            sink.onAssets(type, saved, stepIndex, stepTotal);
-            sink.onStatus("已写入 " + label + " " + saved.size() + " 个（" + stepIndex + "/" + stepTotal + "）");
+            sink.onAssets(type, saved, i + 1, stepTotal);
+            sink.onStatus("已写入 " + ASSET_EXTRACT_STEP_LABEL.get(type) + " " + saved.size()
+                    + " 个（" + (i + 1) + "/" + stepTotal + "）");
         }
         return total;
     }

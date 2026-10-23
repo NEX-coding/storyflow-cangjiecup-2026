@@ -60,7 +60,7 @@ public class LlmJsonSupport {
                 if (items.isArray() && (allowEmptyItems || !items.isEmpty())) {
                     return node;
                 }
-                last = new BusinessException("AI 返回空 items");
+                last = new BusinessException(items.isArray() ? "AI 返回空 items" : "AI 返回结构缺少 items 数组");
             } catch (Exception ex) {
                 last = ex;
             }
@@ -213,7 +213,7 @@ public class LlmJsonSupport {
 
     public JsonNode itemsNode(JsonNode node) {
         if (node == null || node.isNull()) {
-            return objectMapper.createArrayNode();
+            return objectMapper.missingNode();
         }
         if (node.isArray()) {
             return node;
@@ -227,7 +227,7 @@ public class LlmJsonSupport {
                 return node.get(key);
             }
         }
-        return objectMapper.createArrayNode();
+        return objectMapper.missingNode();
     }
 
     public String text(JsonNode node, String... keys) {
