@@ -1,0 +1,260 @@
+:root {
+  --sf-bg: #0b0d11;
+  --sf-sidebar: #0f1117;
+  --sf-card: #141820;
+  --sf-surface: #1a1d27;
+  --sf-surface-raised: #12151c;
+  --sf-border: rgba(255, 255, 255, 0.08);
+  --sf-border-strong: #2a2f3a;
+  --sf-border-subtle: #232833;
+  --sf-text: #f3f4f6;
+  --sf-text-secondary: #d1d5db;
+  --sf-text-muted: #6b7280;
+  --sf-accent: #6366f1;
+  --sf-accent-blue: #3b82f6;
+  --sf-gradient: linear-gradient(135deg, #2563eb 0%, #6366f1 50%, #a855f7 100%);
+  --sf-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--sf-bg);
+  color: var(--sf-text);
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  overflow: hidden;
+}
+
+.page-container,
+.page-shell {
+  width: 100%;
+  margin: 0 auto;
+}
+
+.page-container {
+  height: 100%;
+  overflow: auto;
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.card-block:not(.ant-card) {
+  background: var(--sf-card);
+  border: 1px solid var(--sf-border);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.feedback-item {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--sf-border);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.feedback-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* ── Ant Design dark theme overrides ── */
+
+/* Message / Notification */
+.ant-message-notice-content,
+.ant-notification-notice {
+  background: var(--sf-card) !important;
+  border: 1px solid var(--sf-border) !important;
+  box-shadow: var(--sf-shadow) !important;
+  color: var(--sf-text) !important;
+}
+
+.ant-message-custom-content,
+.ant-message-notice-content span:last-child,
+.ant-notification-notice-message {
+  color: var(--sf-text) !important;
+}
+
+.ant-notification-notice-description {
+  color: var(--sf-text-secondary) !important;
+}
+
+/* Card */
+.ant-card.card-block {
+  background: var(--sf-card);
+  border-color: var(--sf-border);
+}
+
+.ant-card.card-block .ant-card-head {
+  border-bottom-color: var(--sf-border);
+  background: transparent;
+}
+
+.ant-card.card-block .ant-card-head-title {
+  color: var(--sf-text);
+}
+
+.ant-card.card-block .ant-card-body {
+  color: var(--sf-text-secondary);
+}
+
+.ant-card.card-block .ant-card-extra {
+  color: var(--sf-text-muted);
+}
+
+/* Empty */
+.ant-empty-description {
+  color: var(--sf-text-muted) !important;
+}
+
+/* Alert */
+.ant-alert {
+  border-radius: 10px;
+}
+
+.ant-alert-info {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.22);
+}
+
+.ant-alert-info .ant-alert-message {
+  color: var(--sf-text);
+}
+
+.ant-alert-info .ant-alert-description {
+  color: var(--sf-text-secondary);
+}
+
+/* Modal */
+.ant-modal-content {
+  background: var(--sf-card) !important;
+  border: 1px solid var(--sf-border);
+  box-shadow: var(--sf-shadow) !important;
+}
+
+.ant-modal-header {
+  background: transparent !important;
+  border-bottom-color: var(--sf-border) !important;
+}
+
+.ant-modal-title {
+  color: var(--sf-text) !important;
+}
+
+.ant-modal-close {
+  color: var(--sf-text-muted) !important;
+}
+
+.ant-modal-close:hover {
+  color: var(--sf-text) !important;
+}
+
+.ant-modal-footer {
+  border-top-color: var(--sf-border) !important;
+}
+
+.ant-modal-body {
+  color: var(--sf-text-secondary) !important;
+}
+
+/* Modal.confirm — 暗色主题正文/标题对比度 */
+.ant-modal-confirm .ant-modal-confirm-title {
+  color: var(--sf-text) !important;
+}
+
+.ant-modal-confirm .ant-modal-confirm-content,
+.ant-modal-confirm .ant-modal-confirm-paragraph {
+  color: var(--sf-text-secondary) !important;
+}
+
+.ant-modal-confirm .ant-modal-confirm-btns .ant-btn-default {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: var(--sf-border) !important;
+  color: var(--sf-text) !important;
+}
+
+.ant-modal-confirm .ant-modal-confirm-btns .ant-btn-default:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  color: var(--sf-text) !important;
+}
+
+.ant-modal-confirm .ant-modal-confirm-btns .ant-btn-dangerous {
+  background: rgba(239, 68, 68, 0.16) !important;
+  border-color: rgba(239, 68, 68, 0.45) !important;
+  color: #fca5a5 !important;
+}
+
+.ant-modal-confirm .ant-modal-confirm-btns .ant-btn-dangerous:hover {
+  background: rgba(239, 68, 68, 0.28) !important;
+  border-color: rgba(239, 68, 68, 0.65) !important;
+  color: #fecaca !important;
+}
+
+/* Dropdown / Select popup */
+.ant-dropdown .ant-dropdown-menu,
+.ant-select-dropdown {
+  background: var(--sf-card) !important;
+  border: 1px solid var(--sf-border);
+  box-shadow: var(--sf-shadow) !important;
+}
+
+.ant-dropdown-menu-item,
+.ant-select-item {
+  color: var(--sf-text-secondary) !important;
+}
+
+.ant-dropdown-menu-item:hover,
+.ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+.ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  background: rgba(99, 102, 241, 0.15) !important;
+  color: var(--sf-text) !important;
+}
+
+/* Form */
+.ant-form-item-label > label {
+  color: var(--sf-text) !important;
+}
+
+.ant-form-item-extra {
+  color: var(--sf-text-muted) !important;
+}
+
+/* Popover / Popconfirm */
+.ant-popover-inner {
+  background: var(--sf-card) !important;
+  border: 1px solid var(--sf-border);
+  box-shadow: var(--sf-shadow) !important;
+}
+
+.ant-popover-title {
+  color: var(--sf-text) !important;
+  border-bottom-color: var(--sf-border) !important;
+}
+
+.ant-popover-inner-content {
+  color: var(--sf-text-secondary) !important;
+}
+
+/* Spin */
+.ant-spin-text {
+  color: var(--sf-text-secondary) !important;
+}
