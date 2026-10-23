@@ -124,7 +124,22 @@ public class LlmGateway {
                 只输出 JSON 对象 {"items":[...]}，不得输出裸数组或单个资产对象。
                 若确实无可提取项，输出 {"items":[]}。
                 """.formatted(styleName, novelText, scriptJson, propGate);
+        Set<String> expectedCharacters = "character".equals(type)
+                ? scriptCharacterNames(scriptJson) : Set.of();
+        if (!expectedCharacters.isEmpty()) {
+            user += "\n【人物完整性校验】以下剧本人物必须分别输出，不得遗漏或合并："
+                    + String.join("、", expectedCharacters);
+        }
         JsonNode node = callJsonAllowEmpty(system, user);
+        Set<String> missing = missingCharacters(expectedCharacters, node);
+        if (!missing.isEmpty()) {
+            node = callJsonAllowEmpty(system, user + "\n上次遗漏了：" + String.join("、", missing)
+                    + "。请重新输出完整 items 数组，包含上述全部人物。");
+            missing = missingCharacters(expectedCharacters, node);
+            if (!missing.isEmpty()) {
+                throw new BusinessException("AI 漏提剧本人物：" + String.join("、", missing) + "，请重新提取");
+            }
+        }
         List<AssetDto> result = new ArrayList<>();
         for (JsonNode item : itemsNode(node)) {
             String name = text(item, "name", "title");
@@ -161,6 +176,33 @@ public class LlmGateway {
             return new ArrayList<>(result.subList(0, MAX_EXTRACTED_PROPS));
         }
         return result;
+    }
+
+    private Set<String> scriptCharacterNames(String scriptJson) {
+        Set<String> names = new LinkedHashSet<>();
+        try {
+            for (JsonNode script : itemsNode(objectMapper.readTree(scriptJson))) {
+                for (String label : stringList(script, "characters")) {
+                    for (String name : label.split("[,，、/|]")) {
+                        String trimmed = name.trim();
+                        if (!trimmed.isBlank() && !Set.of("无", "无人", "无人物", "旁白", "画外音").contains(trimmed)) {
+                            names.add(trimmed);
+                        }
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            throw new BusinessException("剧本人物摘要格式错误");
+        }
+        return names;
+    }
+
+    private Set<String> missingCharacters(Set<String> expected, JsonNode node) {
+        Set<String> missing = new LinkedHashSet<>(expected);
+        for (JsonNode item : itemsNode(node)) {
+            missing.remove(text(item, "name", "title"));
+        }
+        return missing;
     }
 
     /** 单次道具提取硬上限，与 asset_extract_prop 提示词一致 */

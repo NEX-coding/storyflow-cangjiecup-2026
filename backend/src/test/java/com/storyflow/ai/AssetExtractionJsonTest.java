@@ -48,6 +48,34 @@ class AssetExtractionJsonTest {
     }
 
     @Test
+    void retriesMissingNamedCharacterAndRequiresCompleteResult() {
+        java.util.concurrent.atomic.AtomicInteger calls = new java.util.concurrent.atomic.AtomicInteger();
+        when(client.chatJson(anyString(), anyString())).thenAnswer(invocation -> {
+            String user = invocation.getArgument(1);
+            if (!user.contains("根据上面的信息")) throw new BusinessException("提示词服务暂不可用");
+            assertTrue(user.contains("林夏、陈叔"));
+            return calls.getAndIncrement() == 0
+                    ? "{\"items\":[{\"name\":\"林夏\",\"description\":\"学生\"}]}"
+                    : "{\"items\":[{\"name\":\"林夏\",\"description\":\"学生\"},{\"name\":\"陈叔\",\"description\":\"管理员\"}]}";
+        });
+        var result = gateway().extractAssetsOfType("character", "图书馆故事",
+                "[{\"characters\":[\"林夏\",\"陈叔\"]}]", "电影胶片");
+        assertEquals(2, result.size());
+        assertEquals(2, calls.get());
+    }
+
+    @Test
+    void repeatedMissingCharacterFailsInsteadOfReplacingCompleteAssets() {
+        when(client.chatJson(anyString(), anyString()))
+                .thenReturn("{\"items\":[{\"name\":\"林夏\",\"description\":\"学生\"}]}");
+        BusinessException error = assertThrows(BusinessException.class,
+                () -> gateway().extractAssetsOfType("character", "图书馆故事",
+                        "[{\"characters\":[\"林夏\",\"陈叔\"]}]", "电影胶片"));
+        assertTrue(error.getMessage().contains("陈叔"));
+        verify(client, times(2)).chatJson(anyString(), anyString());
+    }
+
+    @Test
     void explicitEmptyListRemainsValidForAbsentProps() {
         when(client.chatJson(anyString(), anyString())).thenReturn("{\"items\":[]}");
         assertTrue(gateway().extractAssetsOfType("prop", "无人空镜", "[]", "电影胶片").isEmpty());
